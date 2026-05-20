@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>원고 생성 및 검수 (SEMI)</title>
+<script src="config.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#f5f4f0;--surface:#fff;--surface2:#f0efe9;--border:#e2e0d8;--border2:#cccab8;
+  --text:#1a1917;--text2:#6b6960;--text3:#a09e96;
+  --accent:#2d5a3d;--accent-light:#e8f0eb;--accent-text:#1e3f2b;
+  --danger:#8b2020;--danger-bg:#fdeaea;--warn-bg:#fdf6e3;--warn-border:#e8dfc0;
+  --success-bg:#e8f0eb;--success-border:#c5d9cb;
+  --info-bg:#e8f0f8;--info-border:#b8cfe0;--info-text:#1a4060;
+  --add-bg:#f0f7ff;--add-border:#b8d4f0;
+  --radius:8px;--radius-lg:12px;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
+  --shadow-lg:0 4px 16px rgba(0,0,0,.12),0 2px 4px rgba(0,0,0,.06);
+  --hl-add:#d4edda;--hl-del:#fad7d7;--hl-add-text:#155724;--hl-del-text:#721c24;
+}
+[data-theme="dark"] {
+  --bg:#181816;--surface:#222220;--surface2:#2a2a27;--border:#3a3a36;--border2:#555550;
+  --text:#e8e6e0;--text2:#9a9890;--text3:#666460;
+  --accent:#4a9060;--accent-light:#1e3028;--accent-text:#7ecf98;
+  --danger:#e06060;--danger-bg:#3a1818;--warn-bg:#2a2310;--warn-border:#554a20;
+  --success-bg:#1a2e20;--success-border:#2a5035;
+  --info-bg:#1a2535;--info-border:#2a4060;--info-text:#7ab0d8;
+  --add-bg:#0f2a40;--add-border:#1a4570;
+  --hl-add:#1a3a22;--hl-del:#3a1a1a;--hl-add-text:#7ecf98;--hl-del-text:#e08080;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden;font-size:14px;transition:background .2s,color .2s}
+/* Header */
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;height:50px;display:flex;align-items:center;gap:10px;flex-shrink:0;box-shadow:var(--shadow);z-index:10}
+.logo-mark{width:26px;height:26px;background:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;letter-spacing:-0.5px;flex-shrink:0}
+.header-title{font-size:13px;font-weight:600;color:var(--text);letter-spacing:-.3px;white-space:nowrap}
+.header-sep{width:1px;height:18px;background:var(--border);margin:0 2px}
+.header-spacer{flex:1}
+.api-wrap{display:flex;align-items:center;gap:6px}
+.api-wrap label{font-size:11px;color:var(--text3);white-space:nowrap}
+.api-wrap input{width:220px;padding:5px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;background:var(--surface2);color:var(--text);font-family:'DM Mono',monospace;outline:none;transition:border .15s}
+.api-wrap input:focus{border-color:var(--accent)}
+.api-dot{width:7px;height:7px;border-radius:50%;background:var(--border2);transition:background .3s;flex-shrink:0}
+.api-dot.ok{background:#4caf7d}
+.btn-icon-hdr{padding:5px 8px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text2);cursor:pointer;font-size:12px;display:flex;align-items:center;gap:4px;font-family:'Noto Sans KR',sans-serif;transition:all .12s}
+.btn-icon-hdr:hover{background:var(--surface);color:var(--text);border-color:var(--border2)}
+/* Layout */
+.layout{flex:1;display:flex;overflow:hidden}
+/* Sidebar */
+.sidebar{width:230px;min-width:230px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.sb-head{padding:10px 14px 6px;border-bottom:1px solid var(--border)}
+.sb-label{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.cat-list{flex:1;overflow-y:auto;padding:4px}
+.cat-group{margin-bottom:2px}
+.cat-group-header{display:flex;align-items:center;padding:6px 8px 4px;cursor:pointer;gap:5px;border-radius:var(--radius);transition:background .12s;user-select:none}
+.cat-group-header:hover{background:var(--surface2)}
+.cat-group-header.active-group{background:var(--accent-light)}
+.cat-group-name{font-size:12px;font-weight:600;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cat-group-header.active-group .cat-group-name{color:var(--accent-text)}
+.cat-arrow{font-size:10px;color:var(--text3);transition:transform .15s;flex-shrink:0}
+.cat-arrow.open{transform:rotate(90deg)}
+.cat-del-g{font-size:10px;color:var(--text3);padding:2px 4px;border-radius:3px;opacity:0;cursor:pointer;flex-shrink:0}
+.cat-group-header:hover .cat-del-g{opacity:1}
+.cat-del-g:hover{color:var(--danger);background:var(--danger-bg)}
+.sub-list{padding-left:14px;display:none}
+.sub-list.open{display:block}
+.sub-item{display:flex;align-items:center;padding:5px 8px;border-radius:var(--radius);cursor:pointer;font-size:12px;color:var(--text2);gap:6px;margin-bottom:1px;transition:background .1s}
+.sub-item:hover{background:var(--surface2);color:var(--text)}
+.sub-item.active{background:var(--accent-light);color:var(--accent-text);font-weight:500}
+.sub-dot{width:5px;height:5px;border-radius:50%;background:var(--border2);flex-shrink:0}
+.sub-item.active .sub-dot{background:var(--accent)}
+.sub-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sub-del{font-size:10px;color:var(--text3);padding:2px 3px;border-radius:3px;opacity:0;cursor:pointer}
+.sub-item:hover .sub-del{opacity:1}
+.sub-del:hover{color:var(--danger);background:var(--danger-bg)}
+.add-sub-btn{display:flex;align-items:center;gap:4px;padding:4px 8px;margin-left:14px;font-size:11px;color:var(--text3);cursor:pointer;border-radius:var(--radius);transition:all .12s;background:transparent;border:none;font-family:'Noto Sans KR',sans-serif;margin-bottom:2px}
+.add-sub-btn:hover{color:var(--accent);background:var(--accent-light)}
+.add-cat-btn{margin:6px 8px;padding:7px 10px;border:1px dashed var(--border2);border-radius:var(--radius);background:transparent;color:var(--text2);font-size:11px;cursor:pointer;width:calc(100% - 16px);text-align:left;font-family:'Noto Sans KR',sans-serif;transition:all .12s;display:flex;align-items:center;gap:5px}
+.add-cat-btn:hover{background:var(--surface2);color:var(--text);border-color:var(--text3)}
+/* Main */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+/* Mode tabs */
+.mode-tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;gap:0;flex-shrink:0}
+.mode-tab{padding:10px 18px;font-size:13px;font-weight:400;color:var(--text2);background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:color .12s;white-space:nowrap}
+.mode-tab:hover{color:var(--text)}
+.mode-tab.active{color:var(--accent-text);font-weight:600;border-bottom-color:var(--accent)}
+/* Toolbar */
+.toolbar{background:var(--surface2);border-bottom:1px solid var(--border);padding:7px 14px;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.toolbar-info{font-size:12px;color:var(--text2);flex:1}
+.toolbar-info strong{color:var(--text)}
+/* Buttons */
+.btn{padding:6px 14px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);font-size:12px;cursor:pointer;color:var(--text);font-family:'Noto Sans KR',sans-serif;font-weight:400;transition:all .12s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;box-shadow:var(--shadow)}
+.btn:hover{background:var(--surface2);border-color:var(--border2)}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.38;cursor:not-allowed;transform:none}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:500}
+.btn-primary:hover{opacity:.85}
+.btn-sm{padding:4px 10px;font-size:11px;box-shadow:none}
+.btn-blue{background:var(--info-bg);color:var(--info-text);border-color:var(--info-border)}
+.btn-blue:hover{background:var(--add-bg);border-color:var(--add-border)}
+/* Generate mode */
+.gen-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.gen-jobs-wrap{flex:1;display:flex;overflow:hidden}
+.gen-left{width:340px;min-width:280px;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;background:var(--surface)}
+.gen-right{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.gen-panel-head{padding:8px 14px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0}
+.gen-panel-label{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;flex:1}
+.job-list{flex:1;overflow-y:auto;padding:6px}
+.job-item{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;margin-bottom:6px;cursor:pointer;transition:all .12s}
+.job-item:hover{border-color:var(--border2)}
+.job-item.active{border-color:var(--accent);background:var(--accent-light)}
+.job-item-top{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.job-num{font-size:10px;font-weight:600;color:var(--text3);background:var(--border);padding:1px 6px;border-radius:10px;font-family:'DM Mono',monospace}
+.job-item.active .job-num{background:var(--accent);color:#fff}
+.job-status{font-size:10px;padding:1px 6px;border-radius:10px;margin-left:auto;font-weight:500}
+.job-status.wait{background:var(--surface);color:var(--text3);border:1px solid var(--border)}
+.job-status.running{background:#fff3cd;color:#856404;border:1px solid #ffc107}
+.job-status.done{background:var(--success-bg);color:var(--accent);border:1px solid var(--success-border)}
+.job-status.error{background:var(--danger-bg);color:var(--danger);border:1px solid #f5c6cb}
+.job-kw{font-size:12px;font-weight:500;color:var(--text);margin-bottom:2px}
+.job-sub{font-size:11px;color:var(--text2)}
+.job-del{font-size:11px;color:var(--text3);cursor:pointer;padding:2px 4px;border-radius:3px;margin-left:2px}
+.job-del:hover{color:var(--danger);background:var(--danger-bg)}
+.add-job-form{border-top:1px solid var(--border);padding:10px 12px;background:var(--surface);flex-shrink:0}
+.form-row{margin-bottom:7px}
+.form-label{font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;display:block}
+.form-input{width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-serif;outline:none;transition:border .15s}
+.form-input:focus{border-color:var(--accent)}
+.form-input::placeholder{color:var(--text3)}
+.form-row-inline{display:flex;gap:6px}
+.gen-output-scroll{flex:1;overflow-y:auto;padding:14px;font-size:13px;line-height:1.8;white-space:pre-wrap;word-break:break-word;color:var(--text);background:var(--surface)}
+.gen-output-scroll.empty{color:var(--text3);font-style:italic}
+.gen-output-actions{padding:8px 12px;border-top:1px solid var(--border);background:var(--surface2);display:flex;gap:6px;align-items:center;flex-shrink:0}
+.batch-progress{font-size:11px;color:var(--text2);margin-left:auto;font-family:'DM Mono',monospace}
+/* Review mode */
+.review-area{flex:1;display:flex;overflow:hidden}
+.panel{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.panel+.panel{border-left:1px solid var(--border)}
+.panel-head{padding:8px 12px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0}
+.panel-tag{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;flex:1}
+.panel-badge{font-size:10px;font-weight:500;padding:1px 8px;border-radius:20px;display:none}
+.panel-badge.ok{display:inline-block;background:var(--success-bg);color:var(--accent);border:1px solid var(--success-border)}
+.panel-body{flex:1;display:flex;flex-direction:column;overflow:hidden}
+textarea{flex:1;border:none;outline:none;resize:none;padding:12px 14px;font-size:13px;line-height:1.8;color:var(--text);background:var(--surface);font-family:'Noto Sans KR',sans-serif;width:100%}
+textarea::placeholder{color:var(--text3)}
+textarea:disabled{background:var(--surface2);color:var(--text3)}
+.output-scroll{flex:1;overflow-y:auto;padding:12px 14px;font-size:13px;line-height:1.8;word-break:break-word;color:var(--text);background:var(--surface)}
+.output-scroll.empty{color:var(--text3);font-style:italic}
+/* Diff highlight */
+.diff-wrap{flex:1;overflow-y:auto;padding:12px 14px;font-size:13px;line-height:1.8;word-break:break-word;background:var(--surface)}
+.diff-wrap ins{background:var(--hl-add);color:var(--hl-add-text);text-decoration:none;border-radius:2px;padding:0 1px}
+.diff-wrap del{background:var(--hl-del);color:var(--hl-del-text);text-decoration:line-through;border-radius:2px;padding:0 1px}
+.diff-legend{display:flex;gap:10px;padding:5px 12px;border-bottom:1px solid var(--border);background:var(--surface2);font-size:11px;flex-shrink:0}
+.dl-add{color:var(--hl-add-text);background:var(--hl-add);padding:1px 7px;border-radius:3px}
+.dl-del{color:var(--hl-del-text);background:var(--hl-del);padding:1px 7px;border-radius:3px;text-decoration:line-through}
+.view-toggle{display:flex;gap:3px}
+.vt-btn{padding:3px 8px;border:1px solid var(--border);border-radius:var(--radius);font-size:11px;cursor:pointer;background:var(--surface2);color:var(--text2);font-family:'Noto Sans KR',sans-serif;transition:all .12s}
+.vt-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.output-footer{border-top:1px solid var(--border);background:var(--surface2);flex-shrink:0}
+.action-row{padding:7px 12px;display:flex;gap:6px;align-items:center}
+.char-count{font-size:11px;color:var(--text3);margin-left:auto;font-family:'DM Mono',monospace}
+.fb-row{border-top:1px solid var(--border);display:flex}
+.fb-row textarea{flex:1;min-height:52px;max-height:90px;background:var(--surface2);font-size:12px;padding:9px 12px}
+.fb-btn{width:68px;flex-shrink:0;border:none;border-left:1px solid var(--border);background:transparent;cursor:pointer;font-size:11px;color:var(--text2);font-family:'Noto Sans KR',sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;transition:all .12s}
+.fb-btn:hover:not(:disabled){background:var(--surface);color:var(--accent)}
+.fb-btn:disabled{opacity:.35;cursor:not-allowed}
+/* Status */
+.statusbar{background:var(--surface2);border-top:1px solid var(--border);padding:4px 14px;display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text3);flex-shrink:0;min-height:26px}
+.statusbar.loading{color:var(--accent)}
+.statusbar.error{color:var(--danger)}
+.spinner{width:10px;height:10px;border:1.5px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .65s linear infinite;display:none;flex-shrink:0}
+.spinner.on{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* Modal */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(2px)}
+.overlay.hidden{display:none}
+.modal{background:var(--surface);border-radius:var(--radius-lg);border:1px solid var(--border);box-shadow:var(--shadow-lg);width:580px;max-width:96vw;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;animation:min .18s ease-out}
+@keyframes min{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+.modal-sm{width:420px}
+.modal-head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;background:var(--surface2)}
+.modal-head h3{font-size:14px;font-weight:600;flex:1}
+.modal-body{flex:1;overflow-y:auto}
+.modal-foot{padding:10px 14px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:7px;background:var(--surface2)}
+.mrow{padding:10px 16px;border-bottom:1px solid var(--border)}
+.mrow:last-child{border-bottom:none}
+.mlabel{font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px;display:block}
+.minput{width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);outline:none;transition:border .15s}
+.minput:focus{border-color:var(--accent)}
+.mhint{font-size:11px;color:var(--text3);margin-top:3px}
+/* Guide tabs in modal */
+.gtabs{display:flex;border-bottom:1px solid var(--border);background:var(--surface2)}
+.gtab{flex:1;padding:9px 4px;font-size:12px;color:var(--text2);background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:color .12s;text-align:center}
+.gtab:hover{color:var(--text)}
+.gtab.active{color:var(--accent-text);font-weight:600;border-bottom-color:var(--accent);background:var(--surface)}
+.gpanel{display:none;flex-direction:column}
+.gpanel.active{display:flex}
+.ghint{padding:7px 14px;font-size:11px;color:var(--text2);background:var(--warn-bg);border-bottom:1px solid var(--warn-border);line-height:1.5}
+.gpanel textarea{min-height:120px;resize:vertical;font-size:12px;padding:10px 14px;background:var(--surface)}
+/* No selection */
+.no-sel{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text3);gap:10px;font-size:13px}
+.no-sel svg{opacity:.25}
+/* Scrollbar */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--text3)}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="logo-mark">S</div>
+  <span class="header-title">원고 생성 및 검수 (SEMI)</span>
+  <div class="header-sep"></div>
+  <span id="hdrCat" style="font-size:12px;color:var(--text2)">카테고리를 선택하세요</span>
+  <div class="header-spacer"></div>
+  <button class="btn-icon-hdr" onclick="checkUpdate()" id="updateBtn" title="업데이트 확인">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+    <span>업데이트</span>
+  </button>
+  <button class="btn-icon-hdr" onclick="toggleTheme()">
+    <svg id="themeIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    <span id="themeLabel">라이트</span>
+  </button>
+  <div class="api-wrap">
+    <span style="font-size:11px;color:var(--text3)">API</span>
+    <div class="api-dot ok" id="apiDot" title="API 연결됨"></div>
+  </div>
+</div>
+
+<!-- Layout -->
+<div class="layout">
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="sb-head"><div class="sb-label">제품 카테고리</div></div>
+  <div class="cat-list" id="catList"></div>
+  <button class="add-cat-btn" onclick="openAddCat()">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    카테고리 추가
+  </button>
+</div>
+
+<!-- Main -->
+<div class="main">
+  <!-- Mode Tabs -->
+  <div class="mode-tabs">
+    <button class="mode-tab active" id="tabGen" onclick="switchMode('gen')">✦ 원고 생성</button>
+    <button class="mode-tab" id="tabRev" onclick="switchMode('rev')">✔ 원고 검수·수정</button>
+    <button class="mode-tab" id="tabMemo" onclick="switchMode('memo')">📋 개선 요청</button>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar" id="toolbar">
+    <span class="toolbar-info" id="toolbarInfo">좌측에서 카테고리 &gt; 하위 카테고리를 선택하세요</span>
+    <button class="btn btn-sm" id="editGuideBtn" style="display:none" onclick="openEditGuide()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      지침 편집
+    </button>
+  </div>
+
+  <!-- Generate Area -->
+  <div class="gen-area" id="genArea">
+    <div id="genNoSel" class="no-sel" style="flex:1;display:flex">
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      카테고리와 하위 카테고리를 선택하면 원고를 생성할 수 있습니다
+    </div>
+    <div id="genMain" class="gen-jobs-wrap" style="display:none">
+      <div class="gen-left">
+        <div class="gen-panel-head">
+          <span class="gen-panel-label">생성 목록</span>
+          <button class="btn btn-sm" onclick="clearJobs()" style="font-size:10px">전체 지우기</button>
+        </div>
+        <div class="job-list" id="jobList"></div>
+        <div class="add-job-form">
+          <div class="form-row">
+            <label class="form-label">키워드 <span style="color:var(--danger)">*</span></label>
+            <input class="form-input" id="jKeyword" placeholder="예: 오메가3 복용법">
+          </div>
+          <div class="form-row">
+            <label class="form-label">서브키워드</label>
+            <input class="form-input" id="jSub" placeholder="예: 임산부, 식후 복용">
+          </div>
+          <div class="form-row">
+            <label class="form-label">페르소나</label>
+            <input class="form-input" id="jPersona" placeholder="비우면 자동 설정됩니다">
+          </div>
+          <div class="form-row-inline">
+            <button class="btn btn-sm btn-blue" style="flex:1" onclick="addJob()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              목록 추가
+            </button>
+            <button class="btn btn-sm btn-primary" style="flex:1" onclick="runAllJobs()" id="runAllBtn">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              전체 생성
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="gen-right">
+        <div class="gen-panel-head">
+          <span class="gen-panel-label" id="genOutLabel">생성 결과</span>
+          <div class="gen-output-actions" style="padding:0;border:none;background:transparent;gap:5px">
+            <button class="btn btn-sm" id="genCopyBtn" disabled onclick="copyGenOut()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>복사
+            </button>
+            <button class="btn btn-sm" id="genExportBtn" disabled onclick="exportAllJobs()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>전체 내보내기
+            </button>
+          </div>
+        </div>
+        <div class="gen-output-scroll empty" id="genOutput">선택한 항목의 생성 결과가 여기에 표시됩니다.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Review Area -->
+  <div class="review-area" id="revArea" style="display:none">
+    <div id="revNoSel" class="no-sel" style="display:none">
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      카테고리와 하위 카테고리를 선택하세요
+    </div>
+    <div class="panel" id="revPanelLeft" style="display:none">
+      <div class="panel-head">
+        <span class="panel-tag">원본 원고</span>
+        <button class="btn btn-sm" onclick="document.getElementById('revInput').value='';updateInputCount()" style="padding:3px 7px">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <span class="char-count" id="inputCount">0자</span>
+      </div>
+      <div class="panel-body">
+        <textarea id="revInput" placeholder="수정할 원고를 붙여넣으세요.&#10;&#10;제목 / 질문 / 답변이 포함된 전체 원고를 붙여넣으면&#10;각 지침에 맞게 검수·수정됩니다." oninput="updateInputCount();checkRevReady()"></textarea>
+      </div>
+      <div style="border-top:1px solid var(--border);padding:7px 12px;background:var(--surface2);flex-shrink:0;display:flex;gap:6px;align-items:center">
+        <button class="btn btn-primary btn-sm" id="revBtn" disabled onclick="runReview()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          AI 검수·수정
+        </button>
+      </div>
+    </div>
+    <div class="panel" id="revPanelRight" style="display:none">
+      <div class="panel-head">
+        <span class="panel-tag">수정 원고</span>
+        <div class="view-toggle">
+          <button class="vt-btn active" id="vt0" onclick="setView(0)">수정본</button>
+          <button class="vt-btn" id="vt1" onclick="setView(1)">변경 하이라이트</button>
+        </div>
+        <span class="panel-badge" id="revDoneBadge">완료</span>
+      </div>
+      <div class="diff-legend" id="diffLegend" style="display:none">
+        <span class="dl-add">추가</span>
+        <span class="dl-del">삭제</span>
+        <span style="font-size:11px;color:var(--text3);margin-left:4px">변경된 부분이 표시됩니다</span>
+      </div>
+      <div class="output-scroll empty" id="revOutput" style="display:block">AI 검수 후 수정 원고가 여기에 표시됩니다.</div>
+      <div class="diff-wrap" id="diffOutput" style="display:none"></div>
+      <div class="output-footer">
+        <div class="action-row">
+          <button class="btn btn-sm" id="revCopyBtn" disabled onclick="copyRevOut()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>복사
+          </button>
+          <button class="btn btn-sm" id="revExportBtn" disabled onclick="exportRevOut()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>내보내기
+          </button>
+          <span class="char-count" id="outputCount"></span>
+        </div>
+        <div class="fb-row">
+          <textarea id="fbTa" placeholder="재수정 피드백 (예: 더 전문적인 톤으로, 답변을 250자로 줄여주세요…)" disabled></textarea>
+          <button class="fb-btn" id="fbBtn" disabled onclick="runRewrite()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            재수정
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Memo Area -->
+  <div class="memo-area" id="memoArea" style="display:none;flex:1;flex-direction:column;overflow:hidden">
+    <div class="memo-top">
+      <div class="memo-header">
+        <div>
+          <div class="memo-title">개선 요청 메모장</div>
+          <div class="memo-desc">사용하다 불편한 점, 추가하고 싶은 기능을 자유롭게 메모하세요.<br>내용을 복사해서 Claude 채팅창에 붙여넣으면 바로 반영해드립니다.</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-start;flex-shrink:0">
+          <button class="btn btn-sm" onclick="copyMemo()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            채팅에 붙여넣기용 복사
+          </button>
+          <button class="btn btn-sm" onclick="clearMemo()" style="color:var(--text3)">전체 지우기</button>
+        </div>
+      </div>
+      <div class="memo-list" id="memoList"></div>
+    </div>
+    <div class="memo-input-area">
+      <div class="memo-input-row">
+        <select class="memo-type-sel" id="memoType">
+          <option value="버그">🐛 버그·오류</option>
+          <option value="기능추가">✦ 기능 추가</option>
+          <option value="UI개선">🎨 UI 개선</option>
+          <option value="지침관련">📋 지침 관련</option>
+          <option value="기타">💬 기타</option>
+        </select>
+        <input class="memo-text-input" id="memoText" placeholder="개선 요청 내용을 입력하세요…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();addMemo();}">
+        <button class="btn btn-primary btn-sm" onclick="addMemo()">추가</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status bar -->
+  <div class="statusbar" id="statusbar">
+    <div class="spinner" id="spin"></div>
+    <span id="statusMsg">카테고리를 선택하고 작업을 시작하세요.</span>
+  </div>
+</div>
+</div>
+
+<!-- Modal: Add/Edit Category -->
+<div class="overlay hidden" id="overlayAddCat">
+<div class="modal modal-sm">
+  <div class="modal-head"><h3 id="addCatTitle">카테고리 추가</h3>
+    <button class="btn btn-sm" onclick="closeModal('overlayAddCat')">✕</button>
+  </div>
+  <div class="modal-body">
+    <div class="mrow"><label class="mlabel">카테고리 이름</label>
+      <input class="minput" id="acName" placeholder="예: 오메가3"></div>
+  </div>
+  <div class="modal-foot">
+    <button class="btn" onclick="closeModal('overlayAddCat')">취소</button>
+    <button class="btn btn-primary" onclick="saveAddCat()">저장</button>
+  </div>
+</div>
+</div>
+
+<!-- Modal: Add/Edit Sub -->
+<div class="overlay hidden" id="overlayAddSub">
+<div class="modal modal-sm">
+  <div class="modal-head"><h3 id="addSubTitle">하위 카테고리 추가</h3>
+    <button class="btn btn-sm" onclick="closeModal('overlayAddSub')">✕</button>
+  </div>
+  <div class="modal-body">
+    <div class="mrow"><label class="mlabel">하위 카테고리 이름</label>
+      <input class="minput" id="asName" placeholder="예: 염증, 면역력">
+      <div class="mhint">여러 개를 한번에 추가하려면 쉼표로 구분하세요</div>
+    </div>
+  </div>
+  <div class="modal-foot">
+    <button class="btn" onclick="closeModal('overlayAddSub')">취소</button>
+    <button class="btn btn-primary" onclick="saveAddSub()">저장</button>
+  </div>
+</div>
+</div>
+
+<!-- Modal: Edit Guide -->
+<div class="overlay hidden" id="overlayGuide">
+<div class="modal">
+  <div class="modal-head"><h3 id="guideModalTitle">지침 편집</h3>
+    <button class="btn btn-sm" onclick="closeModal('overlayGuide')">✕</button>
+  </div>
+  <div class="modal-body">
+    <div class="guide-section-label">✦ 생성 지침 <span style="font-size:10px;font-weight:400;color:var(--text3);margin-left:6px">검수 시에도 동일 지침이 기준으로 적용됩니다</span></div>
+    <div class="gtabs">
+      <button class="gtab active" onclick="switchGTab(0)">📌 공통 지침</button>
+      <button class="gtab" onclick="switchGTab(1)">❓ 질문 지침</button>
+      <button class="gtab" onclick="switchGTab(2)">💬 답변 지침</button>
+      <button class="gtab" onclick="switchGTab(3)">🔬 연구자료 인용</button>
+    </div>
+    <div class="gpanel active" id="gp0">
+      <div class="ghint">💡 공통 — 제품명, 원료사, 제목 규칙, 금지어, 브랜드 톤, 법적 제한 표현. 생성·검수 모두 적용.</div>
+      <textarea id="g0" placeholder="예)&#10;제품명: &#10;원료사: &#10;구성: 제목 1개 + 질문 1개 + 답변 1개&#10;제목: 20~35자, 의문형 또는 정보형, 핵심 키워드 포함&#10;금지어: 치료, 효능, 확실히, 보장&#10;브랜드 톤: 전문적이고 신뢰감 있는 영양사 말투&#10;법적 주의: 의약품 오인 표현 금지"></textarea>
+    </div>
+    <div class="gpanel" id="gp1">
+      <div class="ghint">💡 질문 지침 — 플랫폼, 페르소나, 스토리 흐름, 금지 표현. 생성·검수 모두 적용.</div>
+      <textarea id="g1" placeholder="예)&#10;말투: ~니다체 70% + 구어체 30%&#10;글자수: 600자 내외&#10;키워드: 첫 문장에 포함, 총 3회 언급&#10;스토리 흐름: 상황 설명 → 관리 방법 질문 → 제품 언급 → 마무리 질문&#10;금지: 홍보성 표현, 제품명 직접 언급"></textarea>
+    </div>
+    <div class="gpanel" id="gp2">
+      <div class="ghint">💡 답변 지침 — 말투 규칙, 구성 흐름, 고정 표현, 제품 언급 방식. 생성·검수 모두 적용.</div>
+      <textarea id="g2" placeholder="예)&#10;말투: 친근하지만 전문적으로, 소제목 금지&#10;구성: 질문에 직접 답변 → 성분 소개 → 연구자료 인용 → 제품 소개 → 보조수단 강조 → 검색 유도&#10;첫 문장 고정: (없음)&#10;제품 언급: 1회만, 자연스럽게&#10;마무리: 감사합니다."></textarea>
+    </div>
+    <div class="gpanel" id="gp3">
+      <div class="ghint">💡 연구자료 인용 — 생성·검수 시 답변에 반영할 논문·임상·통계 자료.</div>
+      <textarea id="g3" placeholder="예)&#10;[커큐민 연구]&#10;1. 연구 결과 설명 (출처: 저널명 연도)&#10;&#10;[흡수율 연구]&#10;A. 연구 결과 설명 (출처: 저널명 연도)&#10;&#10;자료가 없으면 비워두세요."></textarea>
+    </div>
+  </div>
+  <div class="modal-foot">
+    <button class="btn" onclick="closeModal('overlayGuide')">취소</button>
+    <button class="btn btn-primary" onclick="saveGuide()">저장</button>
+  </div>
+</div>
+</div>
+
+<script>
+// ── Default categories ──
+// API key loaded from config.js
+const DEFAULT_CATS = [
+  {id:'메가큐민',name:'메가큐민',subs:['염증','면역력','알레르기/비염','두통','인지/기억력']},
+  {id:'미셀큐민',name:'미셀큐민',subs:['암','치매','알부민']},
+  {id:'맨스페놀',name:'맨스페놀',subs:['남성호르몬/정력','전립선','발기부전','정자']},
+  {id:'맨드로포즈',name:'맨드로포즈',subs:['남성호르몬/정력','전립선','발기부전','정자']},
+  {id:'흑본전탕',name:'흑본전탕',subs:['흑본전탕','2세대 흑염소진액']},
+  {id:'위이지케어',name:'위이지케어',subs:['위이지케어','스토맥큐어']},
+  {id:'파미로겐',name:'파미로겐',subs:['파미로겐','메노믹스']},
+  {id:'요레스',name:'요레스',subs:['요레스','요헬씨']},
+  {id:'요로굿',name:'요로굿',subs:['파이토 요로굿','요로웰']},
+  {id:'오큘라레이드',name:'오큘라레이드',subs:['오큘라레이드','빌메루']},
+  {id:'비타민D3',name:'유기농 비타민D3 코어',subs:['파이토뉴트리 비타민D','오르지닉D3']},
+  {id:'블러드플로우',name:'블러드 플로우 케어',subs:['서큘플렉스']},
+  {id:'인칼슘',name:'인칼슘앱솔브',subs:['인칼슘앱솔브','칼마망DK']},
+  {id:'조인트뮤코',name:'조인트리션 뮤코',subs:['조인트리션 뮤코','카틸리션']},
+  {id:'조인트릴리버',name:'조인트리션 릴리버',subs:['터메릭올']},
+  {id:'모환',name:'모환',subs:['허브페시아']},
+  {id:'출환',name:'출환',subs:['국화페놀']},
+  {id:'헤모웰당',name:'헤모웰당',subs:['헤모웰당','글루코믹스']},
+  {id:'맘먼트',name:'맘먼트 수드티',subs:['맘먼트 수드티','업레스']},
+  {id:'리버티엑스',name:'리버티엑스',subs:['리버티엑스','리베티컬']},
+  {id:'지니어스뉴',name:'지니어스뉴',subs:['지니어스뉴','지니어스뉴키즈','올로메가 (지니어스뉴)','올로메가 (지니어스뉴키즈)']},
+  {id:'그로우뉴',name:'그로우뉴',subs:['그로우뉴','그로우뉴키즈','칼마망DK(그로우뉴)','칼마망DK(그로우뉴키즈)']},
+  {id:'이트뮨',name:'이트뮨 배도라지즙',subs:['파이토뉴트리 배도라지즙','2세대 배도라지즙']},
+  {id:'데이프로바',name:'데이프로바',subs:['데이프로바','PCMR유산균']},
+  {id:'슬립밸런스',name:'슬립밸런스',subs:['파이토뉴트리 슬립밸런스','노썸니아']},
+  {id:'오메가3',name:'오메가3',subs:['(하위 카테고리 추후 업데이트 예정)']}
+];
+
+// ── Storage helpers ──
+function load(key,def){try{const v=localStorage.getItem(key);return v?JSON.parse(v):def;}catch{return def;}}
+function save(key,val){try{localStorage.setItem(key,JSON.stringify(val));}catch{}}
+
+// ── State ──
+let cats = load('semi_cats', DEFAULT_CATS);
+let guides = load('semi_guides', {}); // {catId_sub: {g0,g1,g2,g3,g4}}
+let activeCatId = null, activeSub = null;
+let mode = 'gen'; // 'gen' | 'rev'
+let jobs = []; // [{id,keyword,sub,persona,status,result}]
+let activeJobId = null;
+let nextJobId = 1;
+let revOutText = '';
+let origText = '';
+let viewMode = 0; // 0=plain, 1=diff
+let editingCatId = null, editingSubForCat = null;
+let gTabIdx = 0;
+let isDark = load('semi_dark', false);
+
+// ── Theme ──
+function applyTheme(){
+  document.documentElement.setAttribute('data-theme', isDark?'dark':'');
+  document.getElementById('themeLabel').textContent = isDark ? '다크' : '라이트';
+}
+function toggleTheme(){isDark=!isDark;save('semi_dark',isDark);applyTheme();
+// Auto-initialize API key
+setTimeout(()=>{ checkApiKey(); },100);}
+applyTheme();
+// Auto-initialize API key
+setTimeout(()=>{ checkApiKey(); },100);
+
+// ── API Key ──
+function checkApiKey(){
+  const k = getKey();
+  document.getElementById('apiDot').className = 'api-dot' + (k.startsWith('sk-ant-') ? ' ok' : '');
+  if(!k.startsWith('sk-ant-')){
+    document.getElementById('apiDot').title = 'config.js 파일을 같은 폴더에 놓아주세요';
+  } else {
+    document.getElementById('apiDot').title = 'API 연결됨';
+  }
+  checkRevReady(); checkGenReady();
+}
+function _unused(){
+  const k=document.getElementById('apiKey').value.trim();
+  document.getElementById('apiDot').className='api-dot'+(k.startsWith('sk-ant-')?' ok':'');
+  checkRevReady(); checkGenReady();
+}
+function getKey(){ return (typeof SEMI_CONFIG !== "undefined") ? SEMI_CONFIG.apiKey : ""; }
+
+// ── Render sidebar ──
+function renderSidebar(){
+  const el=document.getElementById('catList'); el.innerHTML='';
+  cats.forEach(cat=>{
+    const isOpen = activeCatId===cat.id;
+    const g=document.createElement('div'); g.className='cat-group';
+    const hdr=document.createElement('div');
+    hdr.className='cat-group-header'+(isOpen?' active-group':'');
+    hdr.innerHTML=`<span class="cat-arrow${isOpen?' open':''}">▶</span><span class="cat-group-name">${cat.name}</span><span class="cat-del-g" onclick="delCat(event,'${cat.id}')" title="삭제">✕</span>`;
+    hdr.addEventListener('click',()=>toggleCatGroup(cat.id));
+    g.appendChild(hdr);
+    const sl=document.createElement('div'); sl.className='sub-list'+(isOpen?' open':'');
+    cat.subs.forEach(sub=>{
+      const si=document.createElement('div');
+      si.className='sub-item'+(activeCatId===cat.id&&activeSub===sub?' active':'');
+      si.innerHTML=`<div class="sub-dot"></div><span class="sub-name">${sub}</span><span class="sub-del" onclick="delSub(event,'${cat.id}','${sub}')" title="삭제">✕</span>`;
+      si.addEventListener('click',()=>selectSub(cat.id,sub));
+      sl.appendChild(si);
+    });
+    const addBtn=document.createElement('button');
+    addBtn.className='add-sub-btn';
+    addBtn.innerHTML='<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> 하위 추가';
+    addBtn.onclick=(e)=>{e.stopPropagation();openAddSub(cat.id);};
+    sl.appendChild(addBtn);
+    g.appendChild(sl); el.appendChild(g);
+  });
+}
+
+function toggleCatGroup(id){
+  if(activeCatId===id){activeCatId=null;activeSub=null;}
+  else{activeCatId=id;activeSub=null;}
+  renderSidebar(); updateSelection();
+}
+
+function selectSub(catId,sub){
+  activeCatId=catId; activeSub=sub;
+  renderSidebar(); updateSelection();
+}
+
+function updateSelection(){
+  const cat=cats.find(c=>c.id===activeCatId);
+  const hasSelection=!!(cat&&activeSub);
+  document.getElementById('hdrCat').innerHTML = hasSelection
+    ? `<strong style="color:var(--accent-text)">${cat.name}</strong> <span style="color:var(--text3)">›</span> ${activeSub}`
+    : '카테고리를 선택하세요';
+  document.getElementById('toolbarInfo').innerHTML = hasSelection
+    ? `<strong>${cat.name}</strong> › ${activeSub}`
+    : '좌측에서 카테고리 › 하위 카테고리를 선택하세요';
+  document.getElementById('editGuideBtn').style.display = hasSelection?'':'none';
+  if(mode==='gen') updateGenUI(hasSelection);
+  else updateRevUI(hasSelection);
+  checkGenReady(); checkRevReady();
+}
+
+function updateGenUI(has){
+  document.getElementById('genNoSel').style.display=has?'none':'flex';
+  document.getElementById('genMain').style.display=has?'flex':'none';
+}
+function updateRevUI(has){
+  document.getElementById('revNoSel').style.display=has?'flex':'none';
+  document.getElementById('revPanelLeft').style.display=has?'flex':'none';
+  document.getElementById('revPanelRight').style.display=has?'flex':'none';
+}
+
+// ── Mode switch ──
+function switchMode(m){
+  mode=m;
+  document.getElementById('tabGen').className='mode-tab'+(m==='gen'?' active':'');
+  document.getElementById('tabRev').className='mode-tab'+(m==='rev'?' active':'');
+  document.getElementById('tabMemo').className='mode-tab'+(m==='memo'?' active':'');
+  document.getElementById('genArea').style.display=m==='gen'?'flex':'none';
+  document.getElementById('revArea').style.display=m==='rev'?'flex':'none';
+  document.getElementById('memoArea').style.display=m==='memo'?'flex':'none';
+  document.getElementById('toolbar').style.display=m==='memo'?'none':'flex';
+  const hasSelection=!!(activeCatId&&activeSub);
+  if(m==='gen') updateGenUI(hasSelection);
+  else if(m==='rev') updateRevUI(hasSelection);
+  else renderMemos();
+checkApiKey();
+}
+
+// ── Cat / Sub management ──
+function openAddCat(){editingCatId=null;document.getElementById('addCatTitle').textContent='카테고리 추가';document.getElementById('acName').value='';showModal('overlayAddCat');}
+function saveAddCat(){
+  const name=document.getElementById('acName').value.trim();
+  if(!name)return alert('이름을 입력하세요.');
+  if(editingCatId){const c=cats.find(x=>x.id===editingCatId);if(c)c.name=name;}
+  else{const id='cat_'+Date.now();cats.push({id,name,subs:[]});}
+  save('semi_cats',cats); renderSidebar(); closeModal('overlayAddCat');
+}
+function delCat(e,id){
+  e.stopPropagation();
+  if(!confirm('이 카테고리를 삭제할까요?'))return;
+  cats=cats.filter(c=>c.id!==id);
+  if(activeCatId===id){activeCatId=null;activeSub=null;updateSelection();}
+  save('semi_cats',cats); renderSidebar();
+}
+function openAddSub(catId){editingSubForCat=catId;document.getElementById('addSubTitle').textContent='하위 카테고리 추가';document.getElementById('asName').value='';showModal('overlayAddSub');}
+function saveAddSub(){
+  const raw=document.getElementById('asName').value;
+  const names=raw.split(',').map(s=>s.trim()).filter(Boolean);
+  if(!names.length)return alert('이름을 입력하세요.');
+  const cat=cats.find(c=>c.id===editingSubForCat);
+  if(cat){names.forEach(n=>{if(!cat.subs.includes(n))cat.subs.push(n);});}
+  save('semi_cats',cats); renderSidebar(); closeModal('overlayAddSub');
+}
+function delSub(e,catId,sub){
+  e.stopPropagation();
+  if(!confirm(`"${sub}"를 삭제할까요?`))return;
+  const cat=cats.find(c=>c.id===catId);
+  if(cat)cat.subs=cat.subs.filter(s=>s!==sub);
+  if(activeCatId===catId&&activeSub===sub){activeSub=null;updateSelection();}
+  save('semi_cats',cats); renderSidebar();
+}
+
+// ── Guide modal ──
+function guideKey(){return activeCatId+'__'+activeSub;}
+function openEditGuide(){
+  const cat=cats.find(c=>c.id===activeCatId);
+  document.getElementById('guideModalTitle').textContent=`지침 편집 — ${cat?cat.name:''} › ${activeSub}`;
+  const g=guides[guideKey()]||{};
+  ['g0','g1','g2','g3'].forEach((id,i)=>document.getElementById(id).value=g['g'+i]||'');
+  switchGTab(0); showModal('overlayGuide');
+}
+function saveGuide(){
+  const g={};
+  ['g0','g1','g2','g3'].forEach((id,i)=>g['g'+i]=document.getElementById(id).value.trim());
+  guides[guideKey()]=g; save('semi_guides',guides); closeModal('overlayGuide');
+  setStatus('지침이 저장되었습니다.');
+}
+function switchGTab(n){
+  gTabIdx=n;
+  document.querySelectorAll('.gpanel').forEach((p,i)=>p.className='gpanel'+(i===n?' active':''));
+  document.querySelectorAll('.gtab').forEach((t,i)=>t.className='gtab'+(i===n?' active':''));
+}
+
+// ── Modal helpers ──
+function showModal(id){document.getElementById(id).classList.remove('hidden');}
+function closeModal(id){document.getElementById(id).classList.add('hidden');}
+document.querySelectorAll('.overlay').forEach(el=>el.addEventListener('click',function(e){if(e.target===this)this.classList.add('hidden');}));
+
+// ── AI call ──
+async function callAI(system,user){
+  const key=getKey();
+  if(!key)throw new Error('API Key를 입력해주세요.');
+  const res=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,system,messages:[{role:'user',content:user}]})
+  });
+  const d=await res.json();
+  if(d.error)throw new Error(d.error.message);
+  return d.content.map(b=>b.type==='text'?b.text:'').join('');
+}
+
+function buildGuideBlock(){
+  const g=guides[guideKey()]||{};
+  return `[공통 지침]\n${g.g0||'(없음)'}\n\n[질문 지침]\n${g.g1||'(없음)'}\n\n[답변 지침]\n${g.g2||'(없음)'}\n\n[연구자료 인용]\n${g.g3||'(없음)'}`;
+}
+
+// ── Status ──
+function setStatus(msg,type){
+  const sb=document.getElementById('statusbar');
+  sb.className='statusbar'+(type?' '+type:'');
+  document.getElementById('statusMsg').textContent=msg;
+}
+function setLoading(on){document.getElementById('spin').className=on?'spinner on':'spinner';}
+
+// ── Generate mode ──
+function checkGenReady(){
+  const ok=!!(activeCatId&&activeSub&&getKey().startsWith('sk-ant-'));
+  document.getElementById('runAllBtn').disabled=!ok||jobs.length===0;
+}
+
+function addJob(){
+  const kw=document.getElementById('jKeyword').value.trim();
+  if(!kw)return alert('키워드를 입력하세요.');
+  if(!activeCatId||!activeSub)return alert('하위 카테고리를 먼저 선택하세요.');
+  const job={id:nextJobId++,catId:activeCatId,sub:activeSub,keyword:kw,subkw:document.getElementById('jSub').value.trim(),persona:document.getElementById('jPersona').value.trim(),status:'wait',result:''};
+  jobs.push(job);
+  document.getElementById('jKeyword').value='';
+  document.getElementById('jSub').value='';
+  document.getElementById('jPersona').value='';
+  renderJobs(); checkGenReady();
+  setStatus(`"${kw}" 항목이 목록에 추가되었습니다.`);
+}
+
+function renderJobs(){
+  const el=document.getElementById('jobList'); el.innerHTML='';
+  if(!jobs.length){el.innerHTML='<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px">아직 추가된 항목이 없습니다.<br>아래 양식에서 키워드를 추가하세요.</div>';return;}
+  jobs.forEach((job,idx)=>{
+    const d=document.createElement('div');
+    d.className='job-item'+(activeJobId===job.id?' active':'');
+    const statusMap={wait:'대기',running:'생성 중',done:'완료',error:'오류'};
+    d.innerHTML=`
+      <div class="job-item-top">
+        <span class="job-num">${idx+1}</span>
+        <span style="font-size:10px;color:var(--text3)">${job.sub}</span>
+        <span class="job-status ${job.status}">${statusMap[job.status]}</span>
+        <span class="job-del" onclick="delJob(${job.id})" title="삭제">✕</span>
+      </div>
+      <div class="job-kw">${job.keyword}</div>
+      <div class="job-sub">${[job.subkw,job.persona].filter(Boolean).join(' · ')||'&nbsp;'}</div>`;
+    d.addEventListener('click',()=>selectJob(job.id));
+    el.appendChild(d);
+  });
+  document.getElementById('runAllBtn').disabled=!(activeCatId&&activeSub&&getKey().startsWith('sk-ant-'));
+}
+
+function selectJob(id){
+  activeJobId=id;
+  const job=jobs.find(j=>j.id===id);
+  renderJobs();
+  const out=document.getElementById('genOutput');
+  const cat=cats.find(c=>c.id===(job?job.catId:null));
+  document.getElementById('genOutLabel').textContent = job?`${job.keyword} — ${job.sub}`:'생성 결과';
+  if(job&&job.result){
+    out.textContent=job.result;
+    out.className='gen-output-scroll';
+    document.getElementById('genCopyBtn').disabled=false;
+  } else {
+    out.textContent='아직 생성되지 않았습니다. "전체 생성"을 실행하세요.';
+    out.className='gen-output-scroll empty';
+    document.getElementById('genCopyBtn').disabled=true;
+  }
+}
+
+function delJob(id){
+  jobs=jobs.filter(j=>j.id!==id);
+  if(activeJobId===id){activeJobId=null;document.getElementById('genOutput').textContent='선택한 항목의 생성 결과가 여기에 표시됩니다.';document.getElementById('genOutput').className='gen-output-scroll empty';}
+  renderJobs(); checkGenReady();
+}
+
+function clearJobs(){
+  if(!confirm('전체 목록을 지울까요?'))return;
+  jobs=[]; activeJobId=null;
+  renderJobs();
+  document.getElementById('genOutput').textContent='선택한 항목의 생성 결과가 여기에 표시됩니다.';
+  document.getElementById('genOutput').className='gen-output-scroll empty';
+  document.getElementById('genExportBtn').disabled=true;
+}
+
+async function runAllJobs(){
+  const pending=jobs.filter(j=>j.status!=='done');
+  if(!pending.length)return alert('모든 항목이 이미 완료되었습니다.');
+  setLoading(true);
+  const total=pending.length;
+  for(let i=0;i<pending.length;i++){
+    const job=pending[i];
+    job.status='running'; renderJobs();
+    setStatus(`생성 중 (${i+1}/${total}): ${job.keyword}…`,'loading');
+    try{
+      const cat=cats.find(c=>c.id===job.catId);
+      const g=guides[job.catId+'__'+job.sub]||{};
+      const personaLine=job.persona?`페르소나: ${job.persona}`:`페르소나: 자동 설정 (키워드와 주제에 맞는 일반 소비자 페르소나를 AI가 설정합니다)`;
+      const gBlock=buildGuideBlock();
+      const sys=`당신은 숙련된 헬스케어 콘텐츠 작가입니다. 아래 지침에 따라 원고를 생성하세요.
+
+[카테고리: ${cat?cat.name:''}]
+[하위 카테고리: ${job.sub}]
+
+${gBlock}
+
+생성 원칙:
+- 페르소나가 없으면 주제에 맞는 소비자 페르소나를 자동 설정 후 그에 맞게 작성
+- 키워드와 서브키워드를 자연스럽게 녹여내기
+- 광고티 없이 실제 도움이 되는 콘텐츠처럼 작성
+- 원고만 출력 (설명 없이)`;
+      const userMsg=`키워드: ${job.keyword}\n서브키워드: ${job.subkw||'없음'}\n${personaLine}\n\n위 정보를 바탕으로 원고(제목+질문+답변)를 생성해주세요.`;
+      const result=await callAI(sys,userMsg);
+      job.result=result.trim(); job.status='done';
+    }catch(e){job.status='error';job.result='오류: '+e.message;}
+    renderJobs();
+    if(activeJobId===job.id)selectJob(job.id);
+  }
+  setLoading(false);
+  const doneCount=jobs.filter(j=>j.status==='done').length;
+  setStatus(`생성 완료 — 총 ${doneCount}건 완료`);
+  document.getElementById('genExportBtn').disabled=false;
+  if(!activeJobId&&jobs.length){selectJob(jobs[jobs.length-1].id);}
+}
+
+function copyGenOut(){
+  const job=jobs.find(j=>j.id===activeJobId);
+  if(!job||!job.result)return;
+  navigator.clipboard.writeText(job.result).then(()=>setStatus('복사되었습니다.')).catch(()=>{fallbackCopy(job.result);setStatus('복사 완료!');});
+}
+
+function exportAllJobs(){
+  const done=jobs.filter(j=>j.status==='done');
+  if(!done.length)return alert('완료된 항목이 없습니다.');
+  const cat=cats.find(c=>c.id===activeCatId);
+  const txt=done.map((j,i)=>`===== ${i+1}. ${j.keyword} [${j.sub}] =====\n\n${j.result}`).join('\n\n\n');
+  const date=new Date().toISOString().slice(0,10);
+  downloadTxt(txt,`[생성]${cat?cat.name:'원고'}_${activeSub}_${date}.txt`);
+  setStatus(`${done.length}건을 텍스트 파일로 내보냈습니다.`);
+}
+
+// ── Review mode ──
+function checkRevReady(){
+  const ok=!!(document.getElementById('revInput').value.trim()&&activeCatId&&activeSub&&getKey().startsWith('sk-ant-'));
+  document.getElementById('revBtn').disabled=!ok;
+}
+function updateInputCount(){
+  const v=document.getElementById('revInput').value;
+  document.getElementById('inputCount').textContent=v.length.toLocaleString()+'자';
+}
+
+function setRevOut(t){
+  revOutText=t;
+  const has=!!t;
+  const plain=document.getElementById('revOutput');
+  plain.textContent=t; plain.className='output-scroll'+(t?'':' empty');
+  document.getElementById('revCopyBtn').disabled=!has;
+  document.getElementById('revExportBtn').disabled=!has;
+  document.getElementById('fbTa').disabled=!has;
+  document.getElementById('fbBtn').disabled=!has;
+  document.getElementById('revDoneBadge').className='panel-badge'+(has?' ok':'');
+  document.getElementById('outputCount').textContent=has?t.length.toLocaleString()+'자':'';
+  if(has&&viewMode===1)renderDiff();
+}
+
+function buildRevSystem(isRewrite){
+  const cat=cats.find(c=>c.id===activeCatId);
+  const gBlock=buildGuideBlock();
+  const base=`당신은 숙련된 헬스케어 콘텐츠 에디터입니다.
+
+[카테고리: ${cat?cat.name:''}]
+[하위 카테고리: ${activeSub}]
+
+${gBlock}`;
+  if(!isRewrite)return base+'\n\n검수 원칙:\n- 위 지침은 원고 생성 기준이자 검수 기준입니다\n- 지침의 스토리 흐름·표기 규칙·금지 표현·말투·글자 수를 기준으로 검토하세요\n- 지침에서 벗어난 부분만 수정하고 원문 구조는 최대한 유지하세요\n- 수정된 원고만 출력';
+  return base+'\n\n재수정 원칙:\n- 피드백 최우선 반영\n- 지침 범위 내에서 조정\n- 수정된 원고만 출력';
+}
+
+async function runReview(){
+  const input=document.getElementById('revInput').value.trim();
+  if(!input)return;
+  origText=input;
+  setLoading(true); setStatus('AI가 원고를 검수·수정 중입니다…','loading'); setRevOut('');
+  try{
+    const r=await callAI(buildRevSystem(false),'다음 원고를 검수·수정해주세요:\n\n'+input);
+    setRevOut(r.trim());
+    setStatus('수정 완료');
+  }catch(e){setStatus('오류: '+e.message,'error');}
+  setLoading(false);
+}
+
+async function runRewrite(){
+  if(!revOutText)return;
+  const fb=document.getElementById('fbTa').value.trim();
+  if(!fb)return alert('재수정 피드백을 입력하세요.');
+  origText=revOutText;
+  setLoading(true); setStatus('피드백 반영 중…','loading');
+  try{
+    const r=await callAI(buildRevSystem(true),'[1차 수정 원고]\n'+revOutText+'\n\n[재수정 피드백]\n'+fb);
+    setRevOut(r.trim());
+    document.getElementById('fbTa').value='';
+    setStatus('재수정 완료');
+  }catch(e){setStatus('오류: '+e.message,'error');}
+  setLoading(false);
+}
+
+// ── Diff highlight ──
+function setView(n){
+  viewMode=n;
+  document.getElementById('vt0').className='vt-btn'+(n===0?' active':'');
+  document.getElementById('vt1').className='vt-btn'+(n===1?' active':'');
+  document.getElementById('revOutput').style.display=n===0?'block':'none';
+  document.getElementById('diffOutput').style.display=n===1?'block':'none';
+  document.getElementById('diffLegend').style.display=n===1?'flex':'none';
+  if(n===1&&revOutText)renderDiff();
+}
+
+function renderDiff(){
+  const a=origText||document.getElementById('revInput').value;
+  const b=revOutText;
+  const el=document.getElementById('diffOutput');
+  el.innerHTML=diffHtml(a,b);
+}
+
+function diffHtml(oldStr,newStr){
+  const ow=oldStr.split(/(\s+)/), nw=newStr.split(/(\s+)/);
+  const dp=Array.from({length:ow.length+1},(_,i)=>Array.from({length:nw.length+1},(_,j)=>i===0?j:j===0?i:0));
+  for(let i=1;i<=ow.length;i++)for(let j=1;j<=nw.length;j++)dp[i][j]=ow[i-1]===nw[j-1]?dp[i-1][j-1]+1:Math.max(dp[i-1][j],dp[i][j-1]);
+  const parts=[];let i=ow.length,j=nw.length;
+  while(i>0||j>0){
+    if(i>0&&j>0&&ow[i-1]===nw[j-1]){parts.unshift({t:'eq',v:ow[i-1]});i--;j--;}
+    else if(j>0&&(i===0||dp[i][j-1]>=dp[i-1][j])){parts.unshift({t:'add',v:nw[j-1]});j--;}
+    else{parts.unshift({t:'del',v:ow[i-1]});i--;}
+  }
+  return parts.map(p=>{
+    const esc=p.v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    if(p.t==='eq')return esc;
+    if(p.t==='add')return`<ins>${esc}</ins>`;
+    return`<del>${esc}</del>`;
+  }).join('');
+}
+
+// ── Export/Copy helpers ──
+function fallbackCopy(txt){const t=document.createElement('textarea');t.value=txt;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);}
+function downloadTxt(txt,name){const b=new Blob([txt],{type:'text/plain;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.click();}
+function copyRevOut(){if(!revOutText)return;navigator.clipboard.writeText(revOutText).then(()=>setStatus('복사되었습니다.')).catch(()=>{fallbackCopy(revOutText);setStatus('복사 완료!');});}
+function exportRevOut(){if(!revOutText)return;const cat=cats.find(c=>c.id===activeCatId);const date=new Date().toISOString().slice(0,10);downloadTxt(revOutText,`[수정]${cat?cat.name:''}${activeSub}_${date}.txt`);setStatus('내보내기 완료.');}
+
+
+// ── Memo ──
+let memos = load('semi_memos', []);
+let memoNextId = memos.length ? Math.max(...memos.map(m=>m.id)) + 1 : 1;
+
+function renderMemos() {
+  const el = document.getElementById('memoList');
+  if (!memos.length) {
+    el.innerHTML = `<div class="memo-empty">
+      <div><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+      아직 메모가 없습니다.<br>아래에서 개선 요청을 추가해보세요.
+    </div>`;
+    return;
+  }
+  el.innerHTML = '';
+  [...memos].reverse().forEach(m => {
+    const d = document.createElement('div');
+    d.className = 'memo-item';
+    d.innerHTML = `
+      <div class="memo-item-left">
+        <div class="memo-item-top">
+          <span class="memo-badge ${m.type}">${m.type}</span>
+          <span class="memo-date">${m.date}</span>
+        </div>
+        <div class="memo-content">${m.content.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')}</div>
+      </div>
+      <span class="memo-del" onclick="delMemo(${m.id})" title="삭제">✕</span>`;
+    el.appendChild(d);
+  });
+}
+
+function addMemo() {
+  const text = document.getElementById('memoText').value.trim();
+  if (!text) return;
+  const type = document.getElementById('memoType').value;
+  const now = new Date();
+  const date = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  memos.push({ id: memoNextId++, type, content: text, date });
+  save('semi_memos', memos);
+  document.getElementById('memoText').value = '';
+  renderMemos();
+checkApiKey();
+  setStatus(`개선 요청이 저장되었습니다. (총 ${memos.length}건)`);
+}
+
+function delMemo(id) {
+  memos = memos.filter(m => m.id !== id);
+  save('semi_memos', memos);
+  renderMemos();
+checkApiKey();
+}
+
+function clearMemo() {
+  if (!memos.length) return;
+  if (!confirm('모든 메모를 지울까요?')) return;
+  memos = []; save('semi_memos', memos); renderMemos();
+checkApiKey();
+}
+
+function copyMemo() {
+  if (!memos.length) return alert('복사할 메모가 없습니다.');
+  const lines = ['[SEMI 프로그램 개선 요청 목록]', '아래 내용을 Claude 채팅창에 붙여넣어 반영 요청하세요.', ''];
+  [...memos].forEach((m, i) => {
+    lines.push(`${i+1}. [${m.type}] ${m.content} (${m.date})`);
+  });
+  const txt = lines.join('\n');
+  navigator.clipboard.writeText(txt)
+    .then(() => setStatus('클립보드에 복사되었습니다. Claude 채팅창에 붙여넣으세요!'))
+    .catch(() => { fallbackCopy(txt); setStatus('복사 완료!'); });
+}
+
+
+// ── Auto Update ──
+const UPDATE_URL = "https://raw.githubusercontent.com/sesame11210-source/semi-manuscript/main/semi_manuscript.html";
+const CURRENT_VERSION = new Date().toISOString().slice(0,10);
+
+async function checkUpdate(){
+  const btn = document.getElementById('updateBtn');
+  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin .8s linear infinite"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg> 확인 중...';
+  try {
+    const res = await fetch(UPDATE_URL + '?t=' + Date.now());
+    if(!res.ok) throw new Error('네트워크 오류');
+    const newHtml = await res.text();
+    // Extract version from new file
+    const verMatch = newHtml.match(/CURRENT_VERSION = "([^"]+)"/);
+    const newVer = verMatch ? verMatch[1] : '알 수 없음';
+    if(newVer > CURRENT_VERSION){
+      if(confirm(`새 버전이 있습니다!\n현재: ${CURRENT_VERSION}\n최신: ${newVer}\n\n지금 업데이트할까요?\n(지침 데이터는 유지됩니다)`)){
+        // Inject config key into new html then download
+        const keyScript = '<script src="config.js"><\/script>';
+        const updated = newHtml.includes('config.js') ? newHtml : newHtml.replace('</head>', keyScript + '</head>');
+        const blob = new Blob([updated], {type:'text/html;charset=utf-8'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'semi_manuscript.html';
+        a.click();
+        setStatus('새 버전을 다운로드했습니다. 현재 파일을 교체해주세요.');
+      }
+    } else {
+      alert(`최신 버전입니다 (${CURRENT_VERSION})`);
+    }
+  } catch(e) {
+    alert('업데이트 확인 실패: ' + e.message + '\n\nGitHub 연결 또는 인터넷 상태를 확인해주세요.');
+  }
+  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg> 업데이트';
+}
+
+// ── Init ──
+
+
+// ── Guide structure migration (v1→v2: merge rev+gen into single set) ──
+(function(){
+  const stored = load('semi_guides', {});
+  let changed = false;
+  Object.keys(stored).forEach(k => {
+    const g = stored[k];
+    // If old structure detected (has g4,g5,g6), migrate to new
+    if(g.g4 !== undefined || g.g5 !== undefined || g.g6 !== undefined) {
+      stored[k] = {
+        g0: g.g3 || g.g0 || '',  // 생성공통 → 공통
+        g1: g.g4 || g.g1 || '',  // 생성질문 → 질문
+        g2: g.g5 || g.g2 || '',  // 생성답변 → 답변
+        g3: g.g6 || g.g3 || '',  // 연구자료 유지
+      };
+      changed = true;
+    }
+  });
+  if(changed) { guides = stored; save('semi_guides', stored); }
+})();
+
+// ── Default guides injection ──
+(function(){
+  const DEFAULTS = {
+    '메가큐민__염증': {
+    "g0": "구성: 제목 1개 + 질문 1개 + 답변 1개\n제목: 20~35자, 의문형 또는 정보형, 핵심 키워드 포함, 금지: 최고·완벽한·기적의\n광고티 없이 실제 도움이 되는 콘텐츠처럼 작성\n페르소나 없으면 키워드·하위 카테고리에 맞는 소비자 페르소나를 자동 설정 후 반영",
+    "g1": "말투: 일상에서 실제로 쓸 법한 말투, \"~니다\"체 70% + 구어체 30%\n글자수: 600자 내외\n키워드: 글 안에 총 3번 언급, 첫 문장 첫줄에 반드시 포함\n문장 호흡: 짧게, 줄바꿈 짧게\n\n[스토리 흐름]\n1. 첫 문장: 키워드 포함 질문형 시작. 이후 페르소나 기반 구체적 상황+고민\n2. 이럴 땐 어떻게 관리해야 하는지 질문\n3. 항염 식품도 많이 먹던데, 이런 것도 흡수율이 중요하다고 메가큐민으로 먹으라 하더라. 일반 강황이랑 효과 차이가 많이 나는지?\n4. 메가큐민으로 검색하면 흡수율 높인 거에 오메가3, 피페린이 같이 구성된 제품이 있다. 이런 구성이 실질적으로 도움될지?\n5. 장점 중 1가지 언급 (랜덤):\n   - 제품 후기만 14,000개가 넘는다\n   - 후기 보면 저랑 비슷한 상황인데 이거 먹고 괜찮아졌다고 꾸준히 먹는다 하더라\n   - 항염·항산화·면역력 등 전체적인 건강관리 차원에서 먹는 것 같더라\n6. 질문으로 마무리\n\n*금지: 커큐민 직접 언급 / '광고', '협찬' 연상 표현\n*지침 흐름 반영 필수",
+    "g2": "말투: 친근하지만 전문적으로\n형식: 소제목 금지, 문단만 나누기, 핵심만\n\n[답변 흐름 - 질문 흐름에 맞춰 순서대로 응답]\n① 질문 1번 키워드 질문에 직접 답변으로 시작. 짧은 공감 + 증상 전문적 설명 1~2문장\n② 질문 2번 항염 관리가 의미 있는지에 직접 응답 후 자연스럽게 연결\n③ 수천 건 누적 연구로 검증된 커 큐민(쿠르쿠민) 소개. 예시 중 1개 선택:\n   - 인도 전통의학 '아유르베다'에서 수천 년 전부터 약재로 활용\n   - ABC 발표 — 강황(커 큐민) 미국 식물성 자연영양제 3년 연속 판매 1위\n   - 사우스캐롤라이나대 연구팀 1,943개 식품 분석, 강황이 염증 감소 효과 1위\n④ 연구자료 목록 중 랜덤 1개 인용 (인용 방식도 랜덤). 결과가 키워드와 관련 있으면 해당 자료 우선\n⑤ 커 큐민 흡수율 저조 이유 설명 → 흡수율 높인 형태 권장 → 미셀큐민 소개 + 흡수율 연구 1개 인용\n⑥ 메가큐민 = 미셀큐민 + 오메가3 + 피페린 구성 설명. 피페린은 생체이용율 2,000%(20배) 향상\n⑦ 보조적 수단임을 강조, 기본 관리 병행 권유\n⑧ 메가큐민 검색 유도 + \"감사합니다.\"\n\n*커큐민 → 쿠르쿠민(커 큐민) 또는 커 큐민(쿠르쿠민)\n*미셀화 커큐민 → 미셀큐민",
+    "g3": "[커큐민 연구자료] - 답변 시 랜덤 1개 선택 인용\n\n1. 건강한 여성 65명 대상 8주간 1일 500mg 섭취 → CRP·LDH·MDA 수준 유의적 감소\n   출처: International Journal of Preventive Medicine (2021)\n\n2. 류마티스 관절염 환자 대상 커큐민 섭취 → 관절 압통, 부종 점수 유의적 감소, 질병 활성도 개선\n   출처: Phytotherapy Research 26.11 (2012)\n\n3. 건강한 성인 대상 12주간 커큐민 섭취 → 혈청 IL-1β, IL-6, TNF-α 수치 유의적 감소\n   출처: Nutrition Journal 15.1 (2016)\n\n4. 과체중 성인 대상 커큐민 섭취 → 혈청 hsCRP, TNF-α 수치 유의적 감소\n   출처: European Journal of Nutrition 58.8 (2019)\n\n5. 골관절염 환자 대상 커큐민 섭취 → 통증·기능장애 지수 유의적 개선, NSAIDs 동등 효과\n   출처: Phytotherapy Research 28.11 (2014)\n\n[미셀큐민 흡수율 연구자료] - ⑤번 답변 시 하나 선택\n\nA. 기존 커큐민 대비 AUC 기준 185배(18500%), CMAX 기준 455배(45500%) 흡수율 증가. SCI급 학술지 등재, 기술 제조특허 증명\n   출처: Molecular nutrition & food research 58.3 (2014)\n\nB. 커큐민 고흡수 원료 흡수율 비교 인체적용시험에서 미셀큐민(노바솔)이 AUC 185배, CMAX 455배로 가장 높은 흡수율 증가 확인\n   출처: Schiborr et al., 2014, Molecular Nutrition & Food Research\n\n*연구 자료 출처 내용 그대로 기재, 연구 결과 수치 변경 금지"
+},
+    '블러드플로우__서큘플렉스': {
+    "g0": "제품명: 서큘플렉스\n구성: 제목 1개 + 질문 1개 + 답변 1개\n제목: 20~35자, 의문형 또는 정보형, 핵심 키워드 포함\n금지 표현:\n- '이 제품 사세요', '강추' 등 직접 구매 유도 금지\n- '완치', '치료' 등 의학적 단정 표현 금지\n- '광고', '협찬' 연상 표현 금지\n- 맨 처음 인삿말 금지 (예: 안녕하세요. ~입니다.)\n광고티 없이 실제 도움이 되는 콘텐츠처럼 작성\n페르소나 없으면 키워드에 맞는 소비자 페르소나 자동 설정",
+    "g1": "말투: 일상에서 실제로 쓸 법한 말투, \"~니다\"체 70% + 구어체 30%\n글자수: 600자 내외\n키워드: 첫 문장에 반드시 포함, 총 3회 언급\n문장 호흡: 짧게, 줄바꿈 짧게\n\n[스토리 흐름]\n1. 첫 문장은 반드시 키워드를 포함한 질문형으로 시작. 이후 본인이 처한 혈행 관련 상황과 고민을 구체적으로 설명\n(예: \"혈액순환이 안 좋으면 어떻게 관리해야 하나요? 요즘 ~한 증상이 있는데...\")\n2. 찾아보면 뭐 하나만 관리해선 소용이 없고 콜레스테롤, 혈압, 중성지방, 혈액순환, 혈당을 한 번에 관리해야 한다던데 맞는지? 이걸 언제 다 관리하나 싶은데..\n3. 영양제는 서큘플렉스 방법으로 먹으면 된다더라. 이게 정확히 뭘 뜻하는 건가? (설명이 필요하다는 멘트)\n4. 서큘플렉스라고 검색해보니 오메가3, 코큐텐, 홍국, 바나바잎추출물이 다 들어있는 제품이 있더라. 이게 다 기능성 인정받은 성분들이라고 하던데..\n5. 장점 1개 언급 (랜덤 선택):\n   - 다른 제품들 보면 기능성 1~2개 정도만 들어있던데 이렇게 다양하게 구성된 건 처음 본다\n   - 각각 다른 역할을 하는 성분들 같던데 후기 보면 저랑 비슷한 상황인 분들이 많이 드시더라\n6. 질문으로 마무리 (예: 전문가분은 어떻게 생각하시나요?, 전문가가 보시기에 이런 구성 어떤가요?)\n\n*지침 흐름 반영 필수",
+    "g2": "말투: 친근하지만 전문적으로\n형식: 소제목 금지, 문단만 나누기, 가독성 있게 핵심만\n\n[답변 흐름]\n① 첫 문장은 질문 1번의 키워드 질문에 직접 답변으로 시작. 짧은 공감 + 혈행 관련 증상 전문적 설명 1~2문장\n(예: \"혈액순환이 저하되면 ~한 문제가 생길 수 있습니다. 특히 ~하기 때문에 복합적인 관리가 필요한 상태입니다.\")\n\n② 질문 2번 \"콜레스테롤·혈압·중성지방·혈액순환·혈당을 한 번에 관리해야 한다는 게 맞는지\"에 직접 응답. 각 요소들이 서로 어떻게 연결되어 악순환 고리를 형성하는지 키워드와의 관계성을 예를 들어 구체적으로 설명. 이 흐름이 서큘플렉스 설명으로 자연스럽게 이어지도록.\n\n③ 질문 3번 서큘플렉스가 무엇인지 직접 설명. 혈행 전반을 함께 관리할 수 있도록 성분들을 구성한 방식이다. 질문 4번 원료 구성이 어떤지에 대한 응답으로 자연스럽게 이어지도록, 아래 순서로 각 성분 설명:\n\n*주의: 키워드 관련 원료를 가장 먼저 언급, 나머지 순서는 무관\n- 키워드 관련 원료: 식약처 기능성 인정 내용 언급 후 연구 자료 인용\n- 오메가3: 식약처 기능성 인정 내용 언급 후 연구 자료 인용\n- 홍국: 식약처 기능성 인정 내용 언급 후 연구 자료 인용\n- 코큐텐(코엔자임큐텐): 식약처 기능성 인정 내용 언급 후 연구 자료 인용\n- 바나바잎추출물: 식약처 기능성 인정 내용 언급 후 연구 자료 인용\n\n④ 현재 고려 중인 제품에 위 원료들이 함께 구성되어 있다고 하셨는데, 혈압·콜레스테롤·혈행·중성지질·혈당 등 여러 혈행 요소를 동시에 보완하는 구조라는 점에서 방향성이 합리적이라고 판단할 수 있다.\n\n⑤ 해당 제품이 식약처로부터 기능성과 안전성 검증을 거친 건강기능식품인지도 추가로 확인해보시기 바란다.\n\n⑥ 광고성 중화 멘트 (예: 다만 이는 보조적 수단이므로 식단, 운동 등 기본 관리를 함께 병행하시는 것이 중요합니다.)\n\n⑦ 마무리: 서큘플렉스 검색 유도 멘트\n(예: 서큘플렉스 관련해서는 원료 구성 근거나 각각에 대한 연구 자료가 정리된 글들도 있으니 검색해 참고하시면 도움될 것 같습니다.)\n\n*연구 자료는 출처 그대로 기재, 연구 결과 내용 변경 금지\n*지침 흐름 반영 필수",
+    "g3": "[오메가3 연구자료]\n- 고콜레스테롤혈증 환자 대상 혈류매개 혈관확장 반응(FMD) 유의적 증가 및 혈중 중성지질 수치 감소 확인\n  출처: Journal of the American College of Cardiology 35.2 (2000)\n\n[홍국 연구자료]\n- 고지혈증 환자 대상 섭취 결과 혈중 LDL 콜레스테롤 감소, HDL 콜레스테롤 증가 확인\n  출처: Current Therapeutic Research 58.12 (1997)\n\n[코큐텐(코엔자임큐텐) 연구자료]\n- 2형 당뇨 환자 대상 12주 섭취 결과 수축기 혈압 유의적 감소\n  출처: European journal of clinical nutrition 56.11 (2002)\n\n[바나바잎추출물 연구자료]\n- 당뇨 전단계 환자 대상 섭취 결과 식후혈당 및 인슐린 분비량 유의적 감소\n  출처: Journal of Functional Foods Volume 97\n\n*각 원료 설명 후 해당 연구자료 인용\n*출처 내용 그대로 기재, 연구 결과 수치 변경 금지"
+}
+  };
+  const stored = load('semi_guides', {});
+  let changed = false;
+  Object.keys(DEFAULTS).forEach(k => {
+    if (!stored[k]) {
+      stored[k] = DEFAULTS[k];
+      changed = true;
+    }
+  });
+  if (changed) { guides = stored; save('semi_guides', guides); }
+})();
+
+renderSidebar();
+updateSelection();
+switchMode('gen');
+renderMemos();
+checkApiKey();
+</script>
+</body>
+</html>
